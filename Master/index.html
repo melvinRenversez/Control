@@ -14,13 +14,15 @@
    let UUID = localStorage.UUID || ""; // Récupère le UUID depuis localStorage s’il existe
    document.getElementById("UUIDSpan").innerHTML = UUID
 
-   const socket = new WebSocket("ws://192.168.0.16:9876");
+   const socket = new WebSocket("ws://192.168.0.6:9876");
+
+   alert(UUID)
 
    socket.addEventListener("open", () => {
       console.log("Connecté au serveur WebSocket");
 
       // Si pas encore connecté, demande au serveur un nouvel UUID
-      if (!UUID) {
+      if (!UUID | UUID.length < 10) {
          socket.send(JSON.stringify({
             type: "getUUID"
          }));

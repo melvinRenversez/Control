@@ -9,9 +9,8 @@ let users = []
 
 wss.on("connection", (ws, req) => {
       const ip = req.socket.remoteAddress;
-      console.log("Client connecté depuis l'IP :", ip);
+      // console.log("Client connecté depuis l'IP :", ip);
       ws.on("message", (message) => {
-            console.log(JSON.parse(message))
             let data;
             try {
                   data = JSON.parse(message)
@@ -29,18 +28,12 @@ wss.on("connection", (ws, req) => {
             } else {
                   ws.send("command invalid")
             }
-
       })
 })
 
 function getUUID(ws) {
-      console.log("_______________________________________")
 
-      console.log(ws)
-
-      const UUID = crypto.randomUUID();
-      console.log(UUID)
-
+      const UUID = crypto.randomUUID()
 
       const user = {
             name: "undefined",
@@ -52,24 +45,14 @@ function getUUID(ws) {
 
       user.ws = ws
 
-      console.log(user)
-
       users.push(user)
 
       ws.send(JSON.stringify({ type: "newConnected", UUID: UUID }))
 
-      console.log("_______________________________________")
-
-
-      console.log(users)
-      console.log(users.length)
 
 }
 
 function connection(ws, conData) {
-
-      console.log("CONNECTION")
-
 
       let lastUsers = []
 
@@ -82,7 +65,7 @@ function connection(ws, conData) {
                         const user = users.find(u => u.UUID === conData.UUID);
 
                         if (user) {
-                              console.log("Utilisateur trouvé :", user);
+                              console.log(user.name, 'connected with role', user.role, 'with UUID', user.UUID);
                         } else {
                               console.log("Utilisateur non trouvé.");
                         }
@@ -95,8 +78,6 @@ function connection(ws, conData) {
       })
 
       ws.send(JSON.stringify({ type: "connected" }))
-
-      console.log(users)
 
 }
 

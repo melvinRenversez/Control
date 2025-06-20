@@ -19,7 +19,7 @@ fs.readFile("UUID.uuid", "utf8", (err, data) => {
 console.log(UUID)
 
 function connect() {
-      ws = new WebSocket("ws://192.168.0.16:9876");
+      ws = new WebSocket("ws://192.168.0.6:9876");
 
       ws.on("open", () => {
             console.log("Connexion ouverte");
