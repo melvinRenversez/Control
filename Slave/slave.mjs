@@ -16,10 +16,8 @@ fs.readFile("UUID.uuid", "utf8", (err, data) => {
       console.log(UUID);
 })
 
-console.log(UUID)
-
 function connect() {
-      ws = new WebSocket("ws://192.168.0.6:9876");
+      ws = new WebSocket("ws://192.168.0.17:9876");
 
       ws.on("open", () => {
             console.log("Connexion ouverte");
@@ -29,9 +27,7 @@ function connect() {
                   if (!connected) {
                         console.log("Tentative de connexion...");
                         if (ws.readyState === WebSocket.OPEN) {
-                              console.log("in")
                               if (UUID.length > 0) {
-                                    console.log("UUID existe deja")
                                     ws.send(
                                           JSON.stringify({
                                                 type: "connection",
@@ -47,7 +43,6 @@ function connect() {
                               }
                         }
                   } else {
-                        console.log("clear interval")
                         clearInterval(intervalID);
                   }
             }, 5000);
@@ -56,17 +51,20 @@ function connect() {
       ws.on("message", (data) => {
 
             data = JSON.parse(data)
-            console.log("Réponse serveur:", data);
-            console.log("Réponse serveur:", data.status);
+
+            console.log(data)
 
             if (data.type == "newConnected") {
                   connected = true;
                   console.log("Connexion établie avec ID:", data.UUID);
                   writeUUID(data.UUID)
                   UUID = data.UUID
-            }else if (data.type == "connected"){
-                  console.log("connected sans nex IS")
+            } else if (data.type == "connectedWithRole") {
                   connected = true
+                  console.log("En attente d ordre")
+            }else{
+                  connected = true
+                  console.log("En attente D acceptation pour avoir un role")
             }
 
       });

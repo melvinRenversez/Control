@@ -1,28 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Document</title>
 </head>
+
 <body>
    <p>UUID : <span id="UUIDSpan"></span></p>
 </body>
+
 </html>
 
 <script>
    let UUID = localStorage.UUID || ""; // Récupère le UUID depuis localStorage s’il existe
    document.getElementById("UUIDSpan").innerHTML = UUID
 
-   const socket = new WebSocket("ws://192.168.0.6:9876");
-
-   alert(UUID)
+   const socket = new WebSocket("ws://192.168.0.17:9876");
 
    socket.addEventListener("open", () => {
       console.log("Connecté au serveur WebSocket");
 
       // Si pas encore connecté, demande au serveur un nouvel UUID
-      if (!UUID | UUID.length < 10) {
+      if (!UUID || UUID.length < 10) {
          socket.send(JSON.stringify({
             type: "getUUID"
          }));
@@ -44,11 +45,17 @@
          return;
       }
 
+      console.log(data)
+
       if (data.type === "newConnected" && data.UUID) {
          UUID = data.UUID;
          localStorage.UUID = UUID;
          console.log("UUID reçu et enregistré :", UUID);
          document.getElementById("UUIDSpan").innerHTML = UUID
+      } else if (data.type == "connectedWithRole") {
+         getSlaveDevice()
+      } else {
+         console.log("En attente D acceptation pour avoir un role")
       }
    });
 
@@ -59,4 +66,14 @@
    socket.addEventListener("error", (err) => {
       console.error("Erreur WebSocket :", err);
    });
+
+
+
+   function getSlaveDevice() {
+      console.log("Recuperation des device slave")
+      socket.send(JSON.stringify({
+         type: "getSlaveDevices",
+         data: { UUID }
+      }))
+   }
 </script>

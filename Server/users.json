@@ -1,27 +1,22 @@
 [
   {
-    "name": "melTel",
-    "role": "admin",
-    "UUID": "67c81cb7-9184-4e78-82ff-62be63bbf708"
+    "name": "PC SLAVE MEL",
+    "role": "slave",
+    "UUID": "a43b1025-6985-44ba-ac4e-f52ac7d330b9"
   },
   {
-    "name": "undefined",
-    "role": "undefined",
-    "UUID": "d09620bc-8906-443f-80d2-4041cc347911"
+    "name": "PC MASTER MEL",
+    "role": "master",
+    "UUID": "ce945b91-06e2-41ea-8eb8-f74c3fc7b193"
   },
   {
-    "name": "undefined",
-    "role": "undefined",
-    "UUID": "fe00e229-9a34-4bb6-baea-d249d797bbde"
+    "name": "MEL TEL",
+    "role": "master",
+    "UUID": "d62fc4b0-23c0-48b3-b37c-9695fc4b62a5"
   },
   {
-    "name": "undefined",
+    "name": "KALIMEL",
     "role": "undefined",
-    "UUID": "a599394c-b816-40ec-a205-8c93e81e9298"
-  },
-  {
-    "name": "undefined",
-    "role": "undefined",
-    "UUID": "8e8dc197-d84c-4204-a58e-ddcdd5867037"
+    "UUID": "a6159fc8-e77f-4fd5-a723-102c0ce55d51"
   }
 ]
