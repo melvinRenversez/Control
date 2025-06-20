@@ -46,28 +46,38 @@ wss.on("connection", (ws, req) => {
                   return
             }
 
-            console.log("data :: " , data.type)
+            console.log("data :: ", data.type)
 
             if (data.type == "getUUID") {
                   getUUID(ws)
                   return
-            } 
-            
-            
+            }
+
+
             if (data.type == "connection") {
                   connection(ws, data.data)
                   return
-            } 
-
-            if (data.type == "getSlaveDevices"){
-                  getSlaveDevices(data.data.UUID)
             }
+
+            if (data.type == "getSlaveDevices") {
+                  getSlaveDevices(ws, data.data.UUID)
+                  return;
+            }
+
+
+            if (data.type == "shutdown"){
+                  shutdownDevice(data.data)
+                  return
+            }
+
 
       })
 
 
-      ws.on('close', (code, reason) => {
-            console.log(`Connexion fermée [${code}] ${reason}`);
+      ws.on('close', (code, reason, message) => {
+            console.log("DISCONNECTED // ", users.filter(user => user.ws == ws)[0].name)
+
+            users = users.filter(user => user.ws !== ws)
       })
 })
 
@@ -102,10 +112,8 @@ function connection(ws, conData) {
                         const user = users.find(u => u.UUID === conData.UUID);
 
                         if (user) {
-                              console.log("users", user.role)
                               addUserInUsersList(ws, user.name, user.role, user.UUID)
                         } else {
-                              console.log("Utilisateur non trouvé.");
                               getUUID(ws)
                         }
                   } catch (e) {
@@ -139,8 +147,6 @@ function writeNewUser(user) {
             fs.writeFile("users.json", JSON.stringify(lastUsers, null, 2), (err) => {
                   if (err) {
                         console.error("Erreur lors de l'écriture du fichier:", err);
-                  } else {
-                        console.log("Utilisateur ajouté à users.json");
                   }
             });
       });
@@ -150,10 +156,19 @@ function writeNewUser(user) {
 function addUserInUsersList(ws, name, role, uuid) {
 
 
+      let id;
       let user;
+
+      if (users.length == 0) {
+            id = 1
+      } else {
+            const lastUser = users[users.length - 1];
+            id = lastUser.id + 1;
+      }
 
 
       user = {
+            id: id,
             ws: ws,
             name: name,
             role: role,
@@ -162,29 +177,35 @@ function addUserInUsersList(ws, name, role, uuid) {
 
       users.push(user)
 
-      console.log(name, 'connected with role', role, 'with UUID', uuid);
+      console.log(id, "//", name, 'connected with role', role, 'with UUID', uuid);
 
       if (user.role == "undefined") {
-            ws.send(JSON.stringify({ type: "connectedWithoutRole"}))
+            ws.send(JSON.stringify({ type: "connectedWithoutRole", id:id }))
       } else {
-            ws.send(JSON.stringify({ type: "connectedWithRole"}))
+            ws.send(JSON.stringify({ type: "connectedWithRole", id:id }))
       }
 
 }
 
 
-function getSlaveDevices(uuid){
-      if (verifyUUIDRole(uuid, "master")){
-            console.log("autorise")
+function getSlaveDevices(ws, uuid) {
+      if (verifyUUIDRole(uuid, "master")) {
 
-            let slaveDevice;
+            let slaveDevices;
 
-            slaveDevice = users.filter(user => user.role == "slave")
+            slaveDevices = users.filter(user => user.role == "slave").map(user => ({
+                  id: user.id,
+                  name: user.name
+            }))
 
-            console.log(slaveDevice)
 
-      }else{
-            console.log("non autorise")
+            ws.send(JSON.stringify({
+                  type: "getSlaveDevices",
+                  data: {
+                        slaveDevices
+                  }
+            }))
+
       }
 }
 
@@ -193,7 +214,7 @@ function getSlaveDevices(uuid){
 
 
 
-function verifyUUIDRole(uuid, role){
+function verifyUUIDRole(uuid, role) {
       let uuidRole;
       uuidRole = users.filter(user => user.uuid == uuid)[0].role
       return uuidRole == role;
@@ -204,7 +225,26 @@ function verifyUUIDRole(uuid, role){
 
 
 
+function shutdownDevice(data){
+      console.log(data)
 
+      if (verifyUUIDRole(data.UUID, "master")){
+            let deviceWS;
+            deviceWS = users.find(user => user.id == data.deviceId)
+
+            console.log(deviceWS)
+
+            if (deviceWS && deviceWS.ws && deviceWS.ws.readyState === 1) { // 1 = WebSocket.OPEN
+                  deviceWS.ws.send(JSON.stringify({
+                        type: "shutdown"
+                  }));
+                  console.log(`Shutdown envoyé à l'appareil ID ${data.deviceId}`);
+            } else {
+                  console.warn(`Appareil ID ${data.deviceId} introuvable ou déconnecté`);
+            }
+
+      }
+}
 
 
 

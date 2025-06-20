@@ -1,79 +1,647 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 
 <head>
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>Document</title>
+   <title>Dashboard - Périphériques Esclaves</title>
+   <style>
+      * {
+         margin: 0;
+         padding: 0;
+         box-sizing: border-box;
+      }
+
+      body {
+         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+         background: linear-gradient(135deg, #0f0f23 0%, #1a0b2e 50%, #16213e 100%);
+         min-height: 100vh;
+         color: #ffffff;
+         overflow-x: hidden;
+      }
+
+      .background-effects {
+         position: fixed;
+         top: 0;
+         left: 0;
+         width: 100%;
+         height: 100%;
+         pointer-events: none;
+         z-index: -1;
+      }
+
+      .glow-orb {
+         position: absolute;
+         border-radius: 50%;
+         filter: blur(60px);
+         opacity: 0.3;
+         animation: float 6s ease-in-out infinite;
+      }
+
+      .glow-orb.purple {
+         background: radial-gradient(circle, #8b5cf6, transparent);
+         width: 300px;
+         height: 300px;
+         top: 20%;
+         left: 10%;
+         animation-delay: 0s;
+      }
+
+      .glow-orb.cyan {
+         background: radial-gradient(circle, #06b6d4, transparent);
+         width: 250px;
+         height: 250px;
+         top: 60%;
+         right: 15%;
+         animation-delay: 3s;
+      }
+
+      @keyframes float {
+
+         0%,
+         100% {
+            transform: translateY(0px) scale(1);
+         }
+
+         50% {
+            transform: translateY(-20px) scale(1.1);
+         }
+      }
+
+      .container {
+         max-width: 1200px;
+         margin: 0 auto;
+         padding: 2rem;
+         position: relative;
+         z-index: 1;
+      }
+
+      .header {
+         text-align: center;
+         margin-bottom: 3rem;
+         position: relative;
+      }
+
+      .header h1 {
+         font-size: 3rem;
+         font-weight: 800;
+         background: linear-gradient(135deg, #a855f7, #06b6d4, #8b5cf6);
+         background-size: 300% 300%;
+         -webkit-background-clip: text;
+         -webkit-text-fill-color: transparent;
+         background-clip: text;
+         animation: gradientShift 4s ease infinite;
+         margin-bottom: 0.5rem;
+         text-shadow: 0 0 30px rgba(168, 85, 247, 0.3);
+      }
+
+      @keyframes gradientShift {
+
+         0%,
+         100% {
+            background-position: 0% 50%;
+         }
+
+         50% {
+            background-position: 100% 50%;
+         }
+      }
+
+      .subtitle {
+         font-size: 1.2rem;
+         color: #94a3b8;
+         font-weight: 300;
+      }
+
+      .connection-status {
+         display: inline-flex;
+         align-items: center;
+         gap: 0.5rem;
+         padding: 0.5rem 1rem;
+         border-radius: 2rem;
+         backdrop-filter: blur(10px);
+         border: 1px solid rgba(255, 255, 255, 0.1);
+         margin-top: 1rem;
+         transition: all 0.3s ease;
+      }
+
+      .status-dot {
+         width: 8px;
+         height: 8px;
+         border-radius: 50%;
+         animation: pulse 2s infinite;
+      }
+
+      .status-dot.connected {
+         background: #10b981;
+         box-shadow: 0 0 10px #10b981;
+      }
+
+      .status-dot.disconnected {
+         background: #ef4444;
+         box-shadow: 0 0 10px #ef4444;
+      }
+
+      @keyframes pulse {
+
+         0%,
+         100% {
+            opacity: 1;
+         }
+
+         50% {
+            opacity: 0.5;
+         }
+      }
+
+      .dashboard-card {
+         background: rgba(255, 255, 255, 0.05);
+         backdrop-filter: blur(20px);
+         border: 1px solid rgba(255, 255, 255, 0.1);
+         border-radius: 1.5rem;
+         padding: 2rem;
+         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+         transition: all 0.3s ease;
+         position: relative;
+         overflow: hidden;
+      }
+
+      .dashboard-card::before {
+         content: '';
+         position: absolute;
+         top: 0;
+         left: 0;
+         right: 0;
+         height: 1px;
+         background: linear-gradient(90deg, transparent, #a855f7, #06b6d4, transparent);
+         opacity: 0.5;
+      }
+
+      .dashboard-card:hover {
+         transform: translateY(-5px);
+         box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+         border-color: rgba(168, 85, 247, 0.3);
+      }
+
+      .card-header {
+         display: flex;
+         align-items: center;
+         gap: 1rem;
+         margin-bottom: 1.5rem;
+      }
+
+      .card-icon {
+         width: 3rem;
+         height: 3rem;
+         background: linear-gradient(135deg, #a855f7, #06b6d4);
+         border-radius: 1rem;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         font-size: 1.5rem;
+         box-shadow: 0 10px 20px rgba(168, 85, 247, 0.3);
+      }
+
+      .card-title {
+         font-size: 1.5rem;
+         font-weight: 600;
+         color: #ffffff;
+      }
+
+      .devices-grid {
+         display: grid;
+         gap: 1rem;
+         margin-top: 1rem;
+      }
+
+      .device-item {
+         background: rgba(255, 255, 255, 0.03);
+         border: 1px solid rgba(255, 255, 255, 0.08);
+         border-radius: 1rem;
+         padding: 1.5rem;
+         transition: all 0.3s ease;
+         position: relative;
+         overflow: hidden;
+         opacity: 0;
+         transform: translateY(20px);
+         animation: fadeInUp 0.5s ease forwards;
+      }
+
+      @keyframes fadeInUp {
+         to {
+            opacity: 1;
+            transform: translateY(0);
+         }
+      }
+
+      .device-item::before {
+         content: '';
+         position: absolute;
+         top: 0;
+         left: -100%;
+         width: 100%;
+         height: 100%;
+         background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.1), transparent);
+         transition: left 0.5s ease;
+      }
+
+      .device-item:hover {
+         transform: translateX(5px);
+         border-color: rgba(6, 182, 212, 0.3);
+         background: rgba(255, 255, 255, 0.08);
+      }
+
+      .device-item:hover::before {
+         left: 100%;
+      }
+
+      .device-info {
+         display: flex;
+         align-items: center;
+         gap: 1rem;
+      }
+
+      .device-avatar {
+         width: 2.5rem;
+         height: 2.5rem;
+         background: linear-gradient(135deg, #06b6d4, #a855f7);
+         border-radius: 0.75rem;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         font-weight: 600;
+         font-size: 0.9rem;
+         box-shadow: 0 5px 15px rgba(6, 182, 212, 0.3);
+      }
+
+      .device-details h4 {
+         font-size: 1.1rem;
+         font-weight: 600;
+         color: #ffffff;
+         margin-bottom: 0.25rem;
+      }
+
+      .device-id {
+         font-size: 0.9rem;
+         color: #94a3b8;
+         font-family: 'Monaco', 'Menlo', monospace;
+      }
+
+      .device-actions {
+         margin-left: auto;
+         display: flex;
+         gap: 0.5rem;
+      }
+
+      .shutdown-btn {
+         background: linear-gradient(135deg, #ef4444, #dc2626);
+         border: none;
+         color: white;
+         padding: 0.5rem 1rem;
+         border-radius: 0.5rem;
+         font-size: 0.85rem;
+         font-weight: 600;
+         cursor: pointer;
+         transition: all 0.3s ease;
+         box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+         position: relative;
+         overflow: hidden;
+      }
+
+      .shutdown-btn::before {
+         content: '';
+         position: absolute;
+         top: 0;
+         left: -100%;
+         width: 100%;
+         height: 100%;
+         background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+         transition: left 0.5s ease;
+      }
+
+      .shutdown-btn:hover {
+         transform: translateY(-2px);
+         box-shadow: 0 8px 25px rgba(239, 68, 68, 0.5);
+         background: linear-gradient(135deg, #dc2626, #b91c1c);
+      }
+
+      .shutdown-btn:hover::before {
+         left: 100%;
+      }
+
+      .shutdown-btn:active {
+         transform: translateY(0);
+         box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+      }
+
+      .loading-spinner {
+         display: inline-block;
+         width: 2rem;
+         height: 2rem;
+         border: 3px solid rgba(255, 255, 255, 0.3);
+         border-radius: 50%;
+         border-top-color: #a855f7;
+         animation: spin 1s ease-in-out infinite;
+         margin: 2rem auto;
+      }
+
+      @keyframes spin {
+         to {
+            transform: rotate(360deg);
+         }
+      }
+
+      .empty-state {
+         text-align: center;
+         padding: 3rem;
+         color: #64748b;
+      }
+
+      .empty-state .icon {
+         font-size: 4rem;
+         margin-bottom: 1rem;
+         opacity: 0.5;
+      }
+
+      .stats-bar {
+         display: flex;
+         justify-content: center;
+         gap: 2rem;
+         margin-bottom: 2rem;
+         flex-wrap: wrap;
+      }
+
+      .stat-item {
+         background: rgba(255, 255, 255, 0.05);
+         backdrop-filter: blur(10px);
+         border: 1px solid rgba(255, 255, 255, 0.1);
+         border-radius: 1rem;
+         padding: 1rem 1.5rem;
+         text-align: center;
+         min-width: 120px;
+      }
+
+      .stat-value {
+         font-size: 2rem;
+         font-weight: 700;
+         background: linear-gradient(135deg, #a855f7, #06b6d4);
+         -webkit-background-clip: text;
+         -webkit-text-fill-color: transparent;
+         background-clip: text;
+      }
+
+      .stat-label {
+         font-size: 0.9rem;
+         color: #94a3b8;
+         margin-top: 0.25rem;
+      }
+
+      @media (max-width: 768px) {
+         .container {
+            padding: 1rem;
+         }
+
+         .header h1 {
+            font-size: 2rem;
+         }
+
+         .stats-bar {
+            gap: 1rem;
+         }
+
+         .card-header {
+            flex-direction: column;
+            text-align: center;
+         }
+      }
+   </style>
 </head>
 
 <body>
-   <p>UUID : <span id="UUIDSpan"></span></p>
+   <div class="background-effects">
+      <div class="glow-orb purple"></div>
+      <div class="glow-orb cyan"></div>
+   </div>
+
+   <div class="container">
+      <div class="header">
+         <h1>Dashboard IoT</h1>
+         <p class="subtitle">Gestion des périphériques esclaves connectés</p>
+         <div class="connection-status" id="connectionStatus">
+            <div class="status-dot disconnected" id="statusDot"></div>
+            <span id="statusText">Connexion en cours...</span>
+         </div>
+      </div>
+
+      <div class="stats-bar">
+         <div class="stat-item">
+            <div class="stat-value" id="deviceCount">0</div>
+            <div class="stat-label">Périphériques</div>
+         </div>
+         <div class="stat-item">
+            <div class="stat-value" id="uptime">--:--</div>
+            <div class="stat-label">Uptime</div>
+         </div>
+      </div>
+
+      <div class="dashboard-card">
+         <div class="card-header">
+            <div class="card-icon">🔗</div>
+            <h3 class="card-title">Périphériques Esclaves Connectés</h3>
+         </div>
+
+         <div class="devices-grid" id="slaveList">
+            <div class="loading-spinner"></div>
+         </div>
+      </div>
+   </div>
+
+   <script>
+      let UUID = localStorage.getItem("UUID") || "";
+      let socket;
+      let startTime = Date.now();
+      let devicesData = [];
+
+      // Ne pas utiliser localStorage dans les artefacts Claude
+      function initWebSocket() {
+         socket = new WebSocket("ws://192.168.0.17:9876");
+
+         socket.addEventListener("open", () => {
+            console.log("Connecté au serveur WebSocket");
+            updateConnectionStatus(true);
+
+            if (!UUID || UUID.length < 10) {
+               socket.send(JSON.stringify({
+                  type: "getUUID"
+               }));
+            } else {
+               socket.send(JSON.stringify({
+                  type: "connection",
+                  data: { UUID }
+               }));
+            }
+         });
+
+         socket.addEventListener("message", (event) => {
+            let data;
+
+            try {
+               data = JSON.parse(event.data);
+            } catch (e) {
+               console.error("Réponse non JSON :", event.data);
+               return;
+            }
+
+            console.log(data);
+
+            if (data.type === "newConnected" && data.UUID) {
+               UUID = data.UUID;
+               console.log("UUID reçu et enregistré :", UUID);
+               return;
+            }
+
+            if (data.type == "connectedWithRole") {
+               getSlaveDevice();
+               setInterval(getSlaveDevice, 2000);
+               return;
+            }
+
+            if (data.type == "getSlaveDevices") {
+               const slaveDevices = data.data.slaveDevices;
+               devicesData = slaveDevices;
+               updateDevicesList(slaveDevices);
+               updateStats();
+               return;
+            }
+
+            console.log("En attente d'acceptation pour avoir un rôle");
+         });
+
+         socket.addEventListener("close", () => {
+            console.log("Connexion fermée");
+            updateConnectionStatus(false);
+            // Tentative de reconnexion après 3 secondes
+            setTimeout(initWebSocket, 3000);
+         });
+
+         socket.addEventListener("error", (err) => {
+            console.error("Erreur WebSocket :", err);
+            updateConnectionStatus(false);
+         });
+      }
+
+      function updateConnectionStatus(connected) {
+         const statusDot = document.getElementById("statusDot");
+         const statusText = document.getElementById("statusText");
+
+         if (connected) {
+            statusDot.className = "status-dot connected";
+            statusText.textContent = "Connecté";
+         } else {
+            statusDot.className = "status-dot disconnected";
+            statusText.textContent = "Déconnecté";
+         }
+      }
+
+      // Variables pour éviter les animations bizarres au refresh
+      let isFirstLoad = true;
+      let lastDeviceCount = 0;
+
+      function updateDevicesList(devices) {
+         const slaveList = document.getElementById("slaveList");
+
+         if (devices.length === 0) {
+            slaveList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📱</div>
+                        <h3>Aucun périphérique connecté</h3>
+                        <p>Les périphériques esclaves apparaîtront ici une fois connectés</p>
+                    </div>
+                `;
+            lastDeviceCount = 0;
+            return;
+         }
+
+         // Si c'est le premier chargement ou si le nombre d'appareils change
+         const shouldAnimate = !isFirstLoad && devices.length !== lastDeviceCount;
+
+         // Vider la liste
+         slaveList.innerHTML = "";
+
+         devices.forEach((device, index) => {
+            const deviceElement = document.createElement("div");
+            deviceElement.className = "device-item";
+
+            // Animation uniquement si ce n'est pas le premier chargement
+            if (shouldAnimate) {
+               deviceElement.style.animationDelay = `${index * 0.05}s`;
+            } else {
+               // Pas d'animation pour le premier chargement
+               deviceElement.style.opacity = "1";
+               deviceElement.style.transform = "translateY(0)";
+               deviceElement.style.animation = "none";
+            }
+
+            const deviceInitial = device.name ? device.name.charAt(0).toUpperCase() : '#';
+
+            deviceElement.innerHTML = `
+                    <div class="device-info">
+                        <div class="device-avatar">${deviceInitial}</div>
+                        <div class="device-details">
+                            <h4>${device.name || 'Périphérique Inconnu'}</h4>
+                            <div class="device-id">ID: #${device.id}</div>
+                        </div>
+                        <div class="device-actions">
+                            <button class="shutdown-btn" onclick="shutdownDevice('${device.id}')">
+                                🔴 Éteindre
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+            slaveList.appendChild(deviceElement);
+         });
+
+         lastDeviceCount = devices.length;
+         isFirstLoad = false;
+      }
+
+      function updateStats() {
+         document.getElementById("deviceCount").textContent = devicesData.length;
+
+         // Calcul du temps de fonctionnement
+         const uptime = Math.floor((Date.now() - startTime) / 1000);
+         const minutes = Math.floor(uptime / 60);
+         const seconds = uptime % 60;
+         document.getElementById("uptime").textContent =
+            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      }
+
+      function getSlaveDevice() {
+         if (socket && socket.readyState === WebSocket.OPEN) {
+            console.log("Récupération des périphériques esclaves");
+            socket.send(JSON.stringify({
+               type: "getSlaveDevices",
+               data: { UUID }
+            }));
+         }
+      }
+
+      // Fonction pour éteindre un appareil
+      function shutdownDevice(deviceId) {
+         console.log(`Extinction de l'appareil ID: ${deviceId}`);
+         socket.send(JSON.stringify({
+            type: "shutdown",
+            data: { UUID, deviceId }
+         }));
+      }
+
+      // Mise à jour de l'uptime chaque seconde
+      setInterval(updateStats, 1000);
+
+      // Initialisation
+      initWebSocket();
+   </script>
 </body>
 
 </html>
-
-<script>
-   let UUID = localStorage.UUID || ""; // Récupère le UUID depuis localStorage s’il existe
-   document.getElementById("UUIDSpan").innerHTML = UUID
-
-   const socket = new WebSocket("ws://192.168.0.17:9876");
-
-   socket.addEventListener("open", () => {
-      console.log("Connecté au serveur WebSocket");
-
-      // Si pas encore connecté, demande au serveur un nouvel UUID
-      if (!UUID || UUID.length < 10) {
-         socket.send(JSON.stringify({
-            type: "getUUID"
-         }));
-      } else {
-         socket.send(JSON.stringify({
-            type: "connection",
-            data: { UUID }
-         }));
-      }
-   });
-
-   socket.addEventListener("message", (event) => {
-      let data;
-
-      try {
-         data = JSON.parse(event.data);
-      } catch (e) {
-         console.error("Réponse non JSON :", event.data);
-         return;
-      }
-
-      console.log(data)
-
-      if (data.type === "newConnected" && data.UUID) {
-         UUID = data.UUID;
-         localStorage.UUID = UUID;
-         console.log("UUID reçu et enregistré :", UUID);
-         document.getElementById("UUIDSpan").innerHTML = UUID
-      } else if (data.type == "connectedWithRole") {
-         getSlaveDevice()
-      } else {
-         console.log("En attente D acceptation pour avoir un role")
-      }
-   });
-
-   socket.addEventListener("close", () => {
-      console.log("Connexion fermée");
-   });
-
-   socket.addEventListener("error", (err) => {
-      console.error("Erreur WebSocket :", err);
-   });
-
-
-
-   function getSlaveDevice() {
-      console.log("Recuperation des device slave")
-      socket.send(JSON.stringify({
-         type: "getSlaveDevices",
-         data: { UUID }
-      }))
-   }
-</script>

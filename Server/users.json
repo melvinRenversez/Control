@@ -15,8 +15,18 @@
     "UUID": "d62fc4b0-23c0-48b3-b37c-9695fc4b62a5"
   },
   {
-    "name": "KALIMEL",
+    "name": "KALIMEL SLAVE",
+    "role": "slave",
+    "UUID": "16b3bb3b-4f36-40aa-aeab-305f6bd9ff43"
+  },
+  {
+    "name": "undefined",
     "role": "undefined",
-    "UUID": "a6159fc8-e77f-4fd5-a723-102c0ce55d51"
+    "UUID": "cfc10fbb-401e-481c-8cc6-1ee32328b56f"
+  },
+  {
+    "name": "undefined",
+    "role": "undefined",
+    "UUID": "437967fd-704a-4748-af87-8efbfb97e945"
   }
 ]
