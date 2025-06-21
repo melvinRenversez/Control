@@ -4,9 +4,10 @@ import crypto, { verify } from "crypto"
 import fs from "fs"
 import { fileURLToPath } from 'url';
 import path from "path"
+import { log } from "console";
 
-const JSPort = 9876
-const WEBPort = 3000
+const JSPort = 8008
+const WEBPort = 8000
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,7 +20,6 @@ console.log('SERVER JS en ligne sur le port', JSPort)
 
 const app = express()
 app.use(express.static(path.join(__dirname, 'public')));
-
 
 
 
@@ -65,7 +65,7 @@ wss.on("connection", (ws, req) => {
             }
 
 
-            if (data.type == "shutdown"){
+            if (data.type == "shutdown") {
                   shutdownDevice(data.data)
                   return
             }
@@ -75,7 +75,12 @@ wss.on("connection", (ws, req) => {
 
 
       ws.on('close', (code, reason, message) => {
-            console.log("DISCONNECTED // ", users.filter(user => user.ws == ws)[0].name)
+            try {
+                  console.log("DISCONNECTED // ", users.filter(user => user.ws == ws)[0].name)
+            }
+            catch (e) {
+                  return
+            }
 
             users = users.filter(user => user.ws !== ws)
       })
@@ -104,6 +109,7 @@ function getUUID(ws) {
 
 function connection(ws, conData) {
 
+
       fs.readFile("users.json", "utf8", (err, data) => {
             if (!err && data) {
                   try {
@@ -112,6 +118,7 @@ function connection(ws, conData) {
                         const user = users.find(u => u.UUID === conData.UUID);
 
                         if (user) {
+                              console.log(user)
                               addUserInUsersList(ws, user.name, user.role, user.UUID)
                         } else {
                               getUUID(ws)
@@ -123,7 +130,6 @@ function connection(ws, conData) {
                   console.error("Erreur de lecture :", err);
             }
       })
-
 }
 
 
@@ -155,20 +161,10 @@ function writeNewUser(user) {
 
 function addUserInUsersList(ws, name, role, uuid) {
 
-
-      let id;
       let user;
-
-      if (users.length == 0) {
-            id = 1
-      } else {
-            const lastUser = users[users.length - 1];
-            id = lastUser.id + 1;
-      }
 
 
       user = {
-            id: id,
             ws: ws,
             name: name,
             role: role,
@@ -177,13 +173,27 @@ function addUserInUsersList(ws, name, role, uuid) {
 
       users.push(user)
 
-      console.log(id, "//", name, 'connected with role', role, 'with UUID', uuid);
+      console.log("//", name, 'connected with role', role, 'with UUID', uuid);
 
       if (user.role == "undefined") {
-            ws.send(JSON.stringify({ type: "connectedWithoutRole", id:id }))
+            ws.send(JSON.stringify({
+                  type: "connectedWithoutRole", data: {
+                        name,
+                        role
+                  }
+            }))
       } else {
-            ws.send(JSON.stringify({ type: "connectedWithRole", id:id }))
+            ws.send(JSON.stringify({
+                  type: "connectedWithRole", data: {
+                        name,
+                        role
+                  }
+            }))
       }
+
+
+      console.log("USERS /// ", users)
+      console.log("nb:", users.length)
 
 }
 
@@ -194,7 +204,7 @@ function getSlaveDevices(ws, uuid) {
             let slaveDevices;
 
             slaveDevices = users.filter(user => user.role == "slave").map(user => ({
-                  id: user.id,
+                  id: user.uuid,
                   name: user.name
             }))
 
@@ -205,6 +215,31 @@ function getSlaveDevices(ws, uuid) {
                         slaveDevices
                   }
             }))
+
+            return;
+
+      }
+
+      if (verifyUUIDRole(uuid, "super master")) {
+
+            fs.readFile("users.json", "utf8", (err, data) => {
+                  if (!err && data) {
+                        try {
+                              data = JSON.parse(data)
+                              ws.send(JSON.stringify({
+                                    type: "getSlaveDevices",
+                                    data: {
+                                          data
+                                    }
+                              }))
+                        } catch (e) {
+                              console.error("Erreur de parsing JSON, fichier réinitialisé.");
+                        }
+                  }
+            });
+
+
+            return;
 
       }
 }
@@ -225,12 +260,12 @@ function verifyUUIDRole(uuid, role) {
 
 
 
-function shutdownDevice(data){
-      console.log(data)
+function shutdownDevice(data) {
+      console.log("shutdown :: ", data)
 
-      if (verifyUUIDRole(data.UUID, "master")){
+      if (verifyUUIDRole(data.UUID, "master")) {
             let deviceWS;
-            deviceWS = users.find(user => user.id == data.deviceId)
+            deviceWS = users.find(user => user.uuid == data.deviceUUID)
 
             console.log(deviceWS)
 
@@ -307,7 +342,7 @@ function shutdownDevice(data){
 
 app.get("/", (req, res) => {
       console.log('Connection web')
-      res.send("BIENVENUE")
+      res.sendFile(path.join(__dirname, 'index.html'));
 })
 
 

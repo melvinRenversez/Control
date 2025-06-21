@@ -281,12 +281,6 @@
          margin-bottom: 0.25rem;
       }
 
-      .device-id {
-         font-size: 0.9rem;
-         color: #94a3b8;
-         font-family: 'Monaco', 'Menlo', monospace;
-      }
-
       .device-actions {
          margin-left: auto;
          display: flex;
@@ -461,10 +455,12 @@
       let socket;
       let startTime = Date.now();
       let devicesData = [];
+      let ME;
 
-      // Ne pas utiliser localStorage dans les artefacts Claude
+      // alert(UUID)
+
       function initWebSocket() {
-         socket = new WebSocket("ws://192.168.0.17:9876");
+         socket = new WebSocket("ws://192.168.0.17:8008");
 
          socket.addEventListener("open", () => {
             console.log("Connecté au serveur WebSocket");
@@ -494,20 +490,24 @@
 
             console.log(data);
 
-            if (data.type === "newConnected" && data.UUID) {
+            if (data.type === "newConnected" && data.data.UUID) {
                UUID = data.UUID;
                console.log("UUID reçu et enregistré :", UUID);
+               localStorage.setItem("UUID", UUID)
+               ME = data.data
+               console.log(ME)
                return;
             }
 
             if (data.type == "connectedWithRole") {
-               getSlaveDevice();
                setInterval(getSlaveDevice, 2000);
+               ME = data.data
+               console.log(ME)
                return;
             }
 
             if (data.type == "getSlaveDevices") {
-               const slaveDevices = data.data.slaveDevices;
+               const slaveDevices = data.data.data;
                devicesData = slaveDevices;
                updateDevicesList(slaveDevices);
                updateStats();
@@ -569,6 +569,9 @@
          slaveList.innerHTML = "";
 
          devices.forEach((device, index) => {
+
+            console.log("device :: ", device)
+
             const deviceElement = document.createElement("div");
             deviceElement.className = "device-item";
 
@@ -584,20 +587,48 @@
 
             const deviceInitial = device.name ? device.name.charAt(0).toUpperCase() : '#';
 
-            deviceElement.innerHTML = `
-                    <div class="device-info">
-                        <div class="device-avatar">${deviceInitial}</div>
-                        <div class="device-details">
-                            <h4>${device.name || 'Périphérique Inconnu'}</h4>
-                            <div class="device-id">ID: #${device.id}</div>
-                        </div>
-                        <div class="device-actions">
-                            <button class="shutdown-btn" onclick="shutdownDevice('${device.id}')">
-                                🔴 Éteindre
-                            </button>
-                        </div>
-                    </div>
-                `;
+            let optionButton = ""
+
+            if (ME.role == "super master") {
+               deviceElement.innerHTML = `
+                       <div class="device-info">
+                           <div class="device-avatar">${deviceInitial}</div>
+                           <div class="device-details">
+                               <h4>${device.name || 'Périphérique Inconnu'}</h4>
+                           </div>
+                           <div class="device-actions">
+                              ${
+                              
+                                 device.role == "slave" ? `<button class="shutdown-btn" onclick="shutdownDevice('${device.id}')">
+                                   🔴 Éteindre
+                               </button>` : ""
+                               
+                                 }
+                              
+                               
+                              <button class="shutdown-btn" onclick="shutdownDevice('${device.id}')">
+                                   En savoir plus
+                              </button>
+                           </div>
+                       </div>
+                   `;
+            } else {
+               deviceElement.innerHTML = `
+                       <div class="device-info">
+                           <div class="device-avatar">${deviceInitial}</div>
+                           <div class="device-details">
+                               <h4>${device.name || 'Périphérique Inconnu'}</h4>
+                           </div>
+                           <div class="device-actions">
+                               <button class="shutdown-btn" onclick="shutdownDevice('${device.id}')">
+                                   🔴 Éteindre
+                               </button>
+                              
+                           </div>
+                       </div>
+                   `;
+            }
+
 
             slaveList.appendChild(deviceElement);
          });
@@ -628,11 +659,11 @@
       }
 
       // Fonction pour éteindre un appareil
-      function shutdownDevice(deviceId) {
-         console.log(`Extinction de l'appareil ID: ${deviceId}`);
+      function shutdownDevice(deviceUUID) {
+         console.log(`Extinction de l'appareil ID: ${deviceUUID}`);
          socket.send(JSON.stringify({
             type: "shutdown",
-            data: { UUID, deviceId }
+            data: { UUID, deviceUUID }
          }));
       }
 
