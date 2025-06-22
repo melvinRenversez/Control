@@ -57,12 +57,9 @@
       }
 
       @keyframes float {
-
-         0%,
-         100% {
+         0%, 100% {
             transform: translateY(0px) scale(1);
          }
-
          50% {
             transform: translateY(-20px) scale(1.1);
          }
@@ -96,12 +93,9 @@
       }
 
       @keyframes gradientShift {
-
-         0%,
-         100% {
+         0%, 100% {
             background-position: 0% 50%;
          }
-
          50% {
             background-position: 100% 50%;
          }
@@ -111,6 +105,16 @@
          font-size: 1.2rem;
          color: #94a3b8;
          font-weight: 300;
+      }
+
+      .user-info {
+         background: rgba(255, 255, 255, 0.1);
+         backdrop-filter: blur(10px);
+         border: 1px solid rgba(255, 255, 255, 0.2);
+         border-radius: 1rem;
+         padding: 1rem;
+         margin-bottom: 1rem;
+         text-align: center;
       }
 
       .connection-status {
@@ -143,12 +147,9 @@
       }
 
       @keyframes pulse {
-
-         0%,
-         100% {
+         0%, 100% {
             opacity: 1;
          }
-
          50% {
             opacity: 0.5;
          }
@@ -302,7 +303,22 @@
          overflow: hidden;
       }
 
-      .shutdown-btn::before {
+      .info-btn {
+         background: linear-gradient(135deg, #06b6d4, #0891b2);
+         border: none;
+         color: white;
+         padding: 0.5rem 1rem;
+         border-radius: 0.5rem;
+         font-size: 0.85rem;
+         font-weight: 600;
+         cursor: pointer;
+         transition: all 0.3s ease;
+         box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+         position: relative;
+         overflow: hidden;
+      }
+
+      .shutdown-btn::before, .info-btn::before {
          content: '';
          position: absolute;
          top: 0;
@@ -319,13 +335,18 @@
          background: linear-gradient(135deg, #dc2626, #b91c1c);
       }
 
-      .shutdown-btn:hover::before {
+      .info-btn:hover {
+         transform: translateY(-2px);
+         box-shadow: 0 8px 25px rgba(6, 182, 212, 0.5);
+         background: linear-gradient(135deg, #0891b2, #0e7490);
+      }
+
+      .shutdown-btn:hover::before, .info-btn:hover::before {
          left: 100%;
       }
 
-      .shutdown-btn:active {
+      .shutdown-btn:active, .info-btn:active {
          transform: translateY(0);
-         box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
       }
 
       .loading-spinner {
@@ -390,6 +411,16 @@
          margin-top: 0.25rem;
       }
 
+      .demo-notice {
+         background: rgba(255, 193, 7, 0.1);
+         border: 1px solid rgba(255, 193, 7, 0.3);
+         border-radius: 1rem;
+         padding: 1rem;
+         margin-bottom: 2rem;
+         text-align: center;
+         color: #fbbf24;
+      }
+
       @media (max-width: 768px) {
          .container {
             padding: 1rem;
@@ -421,9 +452,15 @@
       <div class="header">
          <h1>Dashboard IoT</h1>
          <p class="subtitle">Gestion des périphériques esclaves connectés</p>
+         
+         <div class="user-info" id="userInfo" style="display: none;">
+            <h3 id="userName">Utilisateur</h3>
+            <p id="userRole">Rôle non défini</p>
+         </div>
+         
          <div class="connection-status" id="connectionStatus">
             <div class="status-dot disconnected" id="statusDot"></div>
-            <span id="statusText">Connexion en cours...</span>
+            <span id="statusText">Mode démo - Connexion simulée</span>
          </div>
       </div>
 
@@ -451,15 +488,19 @@
    </div>
 
    <script>
+      // In-memory storage instead of localStorage
       let UUID = localStorage.getItem("UUID") || "";
-      let socket;
+      let socket = null;
       let startTime = Date.now();
       let devicesData = [];
-      let ME;
+      let ME = null;
+      
 
-      // alert(UUID)
 
       function initWebSocket() {
+
+
+         // Original WebSocket code (commented out for demo)
          socket = new WebSocket("ws://192.168.0.17:8008");
 
          socket.addEventListener("open", () => {
@@ -493,16 +534,17 @@
             if (data.type === "newConnected" && data.data.UUID) {
                UUID = data.UUID;
                console.log("UUID reçu et enregistré :", UUID);
-               localStorage.setItem("UUID", UUID)
-               ME = data.data
-               console.log(ME)
+               ME = data.data;
+               console.log(ME);
+               updateUserInfo();
                return;
             }
 
             if (data.type == "connectedWithRole") {
                setInterval(getSlaveDevice, 2000);
-               ME = data.data
-               console.log(ME)
+               ME = data.data;
+               console.log(ME);
+               updateUserInfo();
                return;
             }
 
@@ -520,7 +562,6 @@
          socket.addEventListener("close", () => {
             console.log("Connexion fermée");
             updateConnectionStatus(false);
-            // Tentative de reconnexion après 3 secondes
             setTimeout(initWebSocket, 3000);
          });
 
@@ -528,6 +569,19 @@
             console.error("Erreur WebSocket :", err);
             updateConnectionStatus(false);
          });
+         
+      }
+
+      function updateUserInfo() {
+         if (ME) {
+            const userInfo = document.getElementById("userInfo");
+            const userName = document.getElementById("userName");
+            const userRole = document.getElementById("userRole");
+            
+            userName.textContent = ME.name || "Utilisateur";
+            userRole.textContent = `Rôle: ${ME.role || "Non défini"}`;
+            userInfo.style.display = "block";
+         }
       }
 
       function updateConnectionStatus(connected) {
@@ -543,7 +597,6 @@
          }
       }
 
-      // Variables pour éviter les animations bizarres au refresh
       let isFirstLoad = true;
       let lastDeviceCount = 0;
 
@@ -552,83 +605,71 @@
 
          if (devices.length === 0) {
             slaveList.innerHTML = `
-                    <div class="empty-state">
-                        <div class="icon">📱</div>
-                        <h3>Aucun périphérique connecté</h3>
-                        <p>Les périphériques esclaves apparaîtront ici une fois connectés</p>
-                    </div>
-                `;
+               <div class="empty-state">
+                   <div class="icon">📱</div>
+                   <h3>Aucun périphérique connecté</h3>
+                   <p>Les périphériques esclaves apparaîtront ici une fois connectés</p>
+               </div>
+            `;
             lastDeviceCount = 0;
             return;
          }
 
-         // Si c'est le premier chargement ou si le nombre d'appareils change
          const shouldAnimate = !isFirstLoad && devices.length !== lastDeviceCount;
-
-         // Vider la liste
          slaveList.innerHTML = "";
 
          devices.forEach((device, index) => {
-
-            console.log("device :: ", device)
+            console.log("device :: ", device);
 
             const deviceElement = document.createElement("div");
             deviceElement.className = "device-item";
 
-            // Animation uniquement si ce n'est pas le premier chargement
             if (shouldAnimate) {
                deviceElement.style.animationDelay = `${index * 0.05}s`;
             } else {
-               // Pas d'animation pour le premier chargement
                deviceElement.style.opacity = "1";
                deviceElement.style.transform = "translateY(0)";
                deviceElement.style.animation = "none";
             }
 
             const deviceInitial = device.name ? device.name.charAt(0).toUpperCase() : '#';
+            const connectionColor = device.connected ? 'green' : 'red';
 
-            let optionButton = ""
-
-            if (ME.role == "super master") {
-               deviceElement.innerHTML = `
-                       <div class="device-info">
-                           <div class="device-avatar">${deviceInitial}</div>
-                           <div class="device-details">
-                               <h4>${device.name || 'Périphérique Inconnu'}</h4>
-                           </div>
-                           <div class="device-actions">
-                              ${
-                              
-                                 device.role == "slave" ? `<button class="shutdown-btn" onclick="shutdownDevice('${device.id}')">
-                                   🔴 Éteindre
-                               </button>` : ""
-                               
-                                 }
-                              
-                               
-                              <button class="shutdown-btn" onclick="shutdownDevice('${device.id}')">
-                                   En savoir plus
-                              </button>
-                           </div>
-                       </div>
-                   `;
+            let actionButtons = '';
+            
+            if (ME && ME.role === "super master") {
+               actionButtons = `
+                  ${device.role === "slave" ? `
+                     <button class="shutdown-btn" onclick="shutdownDevice('${device.UUID}')">
+                        🔴 Éteindre
+                     </button>
+                  ` : ''}
+                  <button class="info-btn" onclick="moreDevice('${device.UUID}')">
+                     ℹ️ Plus d'infos
+                  </button>
+               `;
             } else {
-               deviceElement.innerHTML = `
-                       <div class="device-info">
-                           <div class="device-avatar">${deviceInitial}</div>
-                           <div class="device-details">
-                               <h4>${device.name || 'Périphérique Inconnu'}</h4>
-                           </div>
-                           <div class="device-actions">
-                               <button class="shutdown-btn" onclick="shutdownDevice('${device.id}')">
-                                   🔴 Éteindre
-                               </button>
-                              
-                           </div>
-                       </div>
-                   `;
+               actionButtons = `
+                  <button class="shutdown-btn" onclick="shutdownDevice('${device.UUID}')">
+                     🔴 Éteindre
+                  </button>
+               `;
             }
 
+            deviceElement.innerHTML = `
+               <div class="device-info">
+                  <div class="device-avatar">${deviceInitial}</div>
+                  <div class="device-details">
+                     <h4 style="color: ${connectionColor}">${device.name || 'Périphérique Inconnu'}</h4>
+                     <p style="font-size: 0.9rem; color: #94a3b8;">
+                        ${device.role || 'Rôle inconnu'} - ${device.connected ? 'En ligne' : 'Hors ligne'}
+                     </p>
+                  </div>
+                  <div class="device-actions">
+                     ${actionButtons}
+                  </div>
+               </div>
+            `;
 
             slaveList.appendChild(deviceElement);
          });
@@ -640,7 +681,6 @@
       function updateStats() {
          document.getElementById("deviceCount").textContent = devicesData.length;
 
-         // Calcul du temps de fonctionnement
          const uptime = Math.floor((Date.now() - startTime) / 1000);
          const minutes = Math.floor(uptime / 60);
          const seconds = uptime % 60;
@@ -658,19 +698,25 @@
          }
       }
 
-      // Fonction pour éteindre un appareil
       function shutdownDevice(deviceUUID) {
          console.log(`Extinction de l'appareil ID: ${deviceUUID}`);
-         socket.send(JSON.stringify({
-            type: "shutdown",
-            data: { UUID, deviceUUID }
-         }));
+
+         if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+               type: "shutdown",
+               data: { UUID, deviceUUID }
+            }));
+         }
       }
 
-      // Mise à jour de l'uptime chaque seconde
-      setInterval(updateStats, 1000);
+      function moreDevice(deviceUUID) {
+         console.log(`Plus d'informations sur l'appareil ID: ${deviceUUID}`);         
+         location.href = `/more?id=${deviceUUID}`;
+      }
 
-      // Initialisation
+      // Update stats every second
+      setInterval(updateStats, 1000);
+      // Initialize
       initWebSocket();
    </script>
 </body>

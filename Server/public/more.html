@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Détails du Périphérique</title>
+   <style>
+      * {
+         margin: 0;
+         padding: 0;
+         box-sizing: border-box;
+      }
+
+      body {
+         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+         background: linear-gradient(135deg, #0f0f23 0%, #1a0b2e 50%, #16213e 100%);
+         min-height: 100vh;
+         color: #ffffff;
+         overflow-x: hidden;
+      }
+
+      .background-effects {
+         position: fixed;
+         top: 0;
+         left: 0;
+         width: 100%;
+         height: 100%;
+         pointer-events: none;
+         z-index: -1;
+      }
+
+      .glow-orb {
+         position: absolute;
+         border-radius: 50%;
+         filter: blur(60px);
+         opacity: 0.3;
+         animation: float 6s ease-in-out infinite;
+      }
+
+      .glow-orb.purple {
+         background: radial-gradient(circle, #8b5cf6, transparent);
+         width: 300px;
+         height: 300px;
+         top: 20%;
+         left: 10%;
+         animation-delay: 0s;
+      }
+
+      .glow-orb.cyan {
+         background: radial-gradient(circle, #06b6d4, transparent);
+         width: 250px;
+         height: 250px;
+         top: 60%;
+         right: 15%;
+         animation-delay: 3s;
+      }
+
+      @keyframes float {
+         0%, 100% {
+            transform: translateY(0px) scale(1);
+         }
+         50% {
+            transform: translateY(-20px) scale(1.1);
+         }
+      }
+
+      .container {
+         max-width: 1000px;
+         margin: 0 auto;
+         padding: 2rem;
+         position: relative;
+         z-index: 1;
+      }
+
+      .header {
+         text-align: center;
+         margin-bottom: 3rem;
+         position: relative;
+      }
+
+      .header h1 {
+         font-size: 2.5rem;
+         font-weight: 800;
+         background: linear-gradient(135deg, #a855f7, #06b6d4, #8b5cf6);
+         background-size: 300% 300%;
+         -webkit-background-clip: text;
+         -webkit-text-fill-color: transparent;
+         background-clip: text;
+         animation: gradientShift 4s ease infinite;
+         margin-bottom: 0.5rem;
+         text-shadow: 0 0 30px rgba(168, 85, 247, 0.3);
+      }
+
+      @keyframes gradientShift {
+         0%, 100% {
+            background-position: 0% 50%;
+         }
+         50% {
+            background-position: 100% 50%;
+         }
+      }
+
+      .subtitle {
+         font-size: 1.2rem;
+         color: #94a3b8;
+         font-weight: 300;
+      }
+
+      .back-btn {
+         position: absolute;
+         top: 0;
+         left: 0;
+         background: rgba(255, 255, 255, 0.1);
+         backdrop-filter: blur(10px);
+         border: 1px solid rgba(255, 255, 255, 0.2);
+         color: white;
+         padding: 0.75rem 1.5rem;
+         border-radius: 1rem;
+         font-size: 1rem;
+         font-weight: 600;
+         cursor: pointer;
+         transition: all 0.3s ease;
+         text-decoration: none;
+         display: inline-flex;
+         align-items: center;
+         gap: 0.5rem;
+      }
+
+      .back-btn:hover {
+         background: rgba(255, 255, 255, 0.2);
+         transform: translateY(-2px);
+      }
+
+      .connection-status {
+         display: inline-flex;
+         align-items: center;
+         gap: 0.5rem;
+         padding: 0.5rem 1rem;
+         border-radius: 2rem;
+         backdrop-filter: blur(10px);
+         border: 1px solid rgba(255, 255, 255, 0.1);
+         margin-top: 1rem;
+         transition: all 0.3s ease;
+      }
+
+      .status-dot {
+         width: 8px;
+         height: 8px;
+         border-radius: 50%;
+         animation: pulse 2s infinite;
+      }
+
+      .status-dot.connected {
+         background: #10b981;
+         box-shadow: 0 0 10px #10b981;
+      }
+
+      .status-dot.disconnected {
+         background: #ef4444;
+         box-shadow: 0 0 10px #ef4444;
+      }
+
+      @keyframes pulse {
+         0%, 100% {
+            opacity: 1;
+         }
+         50% {
+            opacity: 0.5;
+         }
+      }
+
+      .device-card {
+         background: rgba(255, 255, 255, 0.05);
+         backdrop-filter: blur(20px);
+         border: 1px solid rgba(255, 255, 255, 0.1);
+         border-radius: 1.5rem;
+         padding: 2rem;
+         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+         transition: all 0.3s ease;
+         position: relative;
+         overflow: hidden;
+         margin-bottom: 2rem;
+      }
+
+      .device-card::before {
+         content: '';
+         position: absolute;
+         top: 0;
+         left: 0;
+         right: 0;
+         height: 1px;
+         background: linear-gradient(90deg, transparent, #a855f7, #06b6d4, transparent);
+         opacity: 0.5;
+      }
+
+      .device-header {
+         display: flex;
+         align-items: center;
+         gap: 1.5rem;
+         margin-bottom: 2rem;
+      }
+
+      .device-avatar {
+         width: 4rem;
+         height: 4rem;
+         background: linear-gradient(135deg, #06b6d4, #a855f7);
+         border-radius: 1rem;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         font-weight: 700;
+         font-size: 1.5rem;
+         box-shadow: 0 10px 30px rgba(6, 182, 212, 0.3);
+      }
+
+      .device-info h2 {
+         font-size: 1.8rem;
+         font-weight: 700;
+         color: #ffffff;
+         margin-bottom: 0.5rem;
+      }
+
+      .device-info p {
+         color: #94a3b8;
+         font-size: 1rem;
+      }
+
+      .form-section {
+         background: rgba(255, 255, 255, 0.05);
+         backdrop-filter: blur(20px);
+         border: 1px solid rgba(255, 255, 255, 0.1);
+         border-radius: 1.5rem;
+         padding: 2rem;
+         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+         margin-bottom: 2rem;
+      }
+
+      .form-section h3 {
+         color: #ffffff;
+         font-size: 1.4rem;
+         font-weight: 600;
+         margin-bottom: 1.5rem;
+         display: flex;
+         align-items: center;
+         gap: 0.5rem;
+      }
+
+      .form-group {
+         margin-bottom: 1.5rem;
+      }
+
+      .form-group label {
+         display: block;
+         color: #ffffff;
+         font-weight: 600;
+         margin-bottom: 0.5rem;
+         font-size: 0.95rem;
+      }
+
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+         width: 100%;
+         padding: 0.875rem 1rem;
+         background: rgba(255, 255, 255, 0.08);
+         border: 1px solid rgba(255, 255, 255, 0.2);
+         border-radius: 0.75rem;
+         color: #ffffff;
+         font-size: 1rem;
+         transition: all 0.3s ease;
+         backdrop-filter: blur(10px);
+      }
+
+      .form-group input:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+         outline: none;
+         border-color: #a855f7;
+         box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2);
+         background: rgba(255, 255, 255, 0.12);
+      }
+
+      .form-group input::placeholder,
+      .form-group textarea::placeholder {
+         color: #94a3b8;
+      }
+
+      option {
+         color: black;
+      }
+
+      .form-group textarea {
+         resize: vertical;
+         min-height: 100px;
+      }
+
+      .form-row {
+         display: grid;
+         grid-template-columns: 1fr 1fr;
+         gap: 1rem;
+      }
+
+      .save-btn {
+         background: linear-gradient(135deg, #10b981, #059669);
+         border: none;
+         color: white;
+         padding: 1rem 2rem;
+         border-radius: 0.75rem;
+         font-size: 1rem;
+         font-weight: 600;
+         cursor: pointer;
+         transition: all 0.3s ease;
+         box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+         position: relative;
+         overflow: hidden;
+         width: 100%;
+      }
+
+      .save-btn::before {
+         content: '';
+         position: absolute;
+         top: 0;
+         left: -100%;
+         width: 100%;
+         height: 100%;
+         background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+         transition: left 0.5s ease;
+      }
+
+      .save-btn:hover {
+         transform: translateY(-2px);
+         box-shadow: 0 8px 25px rgba(16, 185, 129, 0.5);
+         background: linear-gradient(135deg, #059669, #047857);
+      }
+
+      .save-btn:hover::before {
+         left: 100%;
+      }
+
+      .save-btn:active {
+         transform: translateY(0);
+      }
+
+      .loading-spinner {
+         display: inline-block;
+         width: 2rem;
+         height: 2rem;
+         border: 3px solid rgba(255, 255, 255, 0.3);
+         border-radius: 50%;
+         border-top-color: #a855f7;
+         animation: spin 1s ease-in-out infinite;
+      }
+
+      @keyframes spin {
+         to {
+            transform: rotate(360deg);
+         }
+      }
+
+      .demo-notice {
+         background: rgba(255, 193, 7, 0.1);
+         border: 1px solid rgba(255, 193, 7, 0.3);
+         border-radius: 1rem;
+         padding: 1rem;
+         margin-bottom: 2rem;
+         text-align: center;
+         color: #fbbf24;
+      }
+
+      .readonly-field {
+         background: rgba(255, 255, 255, 0.03) !important;
+         color: #94a3b8 !important;
+         cursor: not-allowed;
+      }
+
+      @media (max-width: 768px) {
+         .container {
+            padding: 1rem;
+         }
+
+         .header h1 {
+            font-size: 2rem;
+         }
+
+         .form-row {
+            grid-template-columns: 1fr;
+         }
+
+         .device-header {
+            flex-direction: column;
+            text-align: center;
+         }
+
+         .back-btn {
+            position: relative;
+            margin-bottom: 1rem;
+         }
+      }
+   </style>
+</head>
+
+<body>
+   <div class="background-effects">
+      <div class="glow-orb purple"></div>
+      <div class="glow-orb cyan"></div>
+   </div>
+
+   <div class="container">
+      <div class="header">
+         <a href="#" class="back-btn" onclick="goBack()">
+            ← Retour au Dashboard
+         </a>
+         
+         <h1>Détails du Périphérique</h1>
+         <p class="subtitle">Configuration et gestion avancée</p>
+         
+         <div class="connection-status" id="connectionStatus">
+            <div class="status-dot disconnected" id="statusDot"></div>
+            <span id="statusText">Mode démo - Connexion simulée</span>
+         </div>
+      </div>
+
+
+      <div class="device-card">
+         <div class="device-header">
+            <div class="device-avatar" id="deviceAvatar">?</div>
+            <div class="device-info">
+               <h2 id="deviceName">Chargement...</h2>
+               <p id="deviceRole">Rôle: Non défini</p>
+               <p id="deviceUUID">UUID: Chargement...</p>
+            </div>
+         </div>
+      </div>
+
+      <div class="form-section">
+         <h3>⚙️ Configuration du Périphérique</h3>
+         
+         <form id="deviceForm">
+            <div class="form-row">
+               <div class="form-group">
+                  <label for="deviceNameInput">Nom du Périphérique</label>
+                  <input type="text" id="deviceNameInput" placeholder="Entrez le nom du périphérique">
+               </div>
+               <div class="form-group">
+                  <label for="deviceRoleInput">Rôle</label>
+                  <select id="deviceRoleInput">
+                     <option value="slave">Esclave</option>
+                     <option value="master">Maître</option>
+                     <option value="super master">Super Maître</option>
+                  </select>
+               </div>
+            </div>
+
+            <div class="form-group">
+               <label for="deviceUUIDInput">UUID</label>
+               <input type="text" id="deviceUUIDInput" class="readonly-field" readonly placeholder="UUID généré automatiquement">
+            </div>
+
+            <button type="submit" class="save-btn">
+               💾 Sauvegarder les Modifications
+            </button>
+         </form>
+      </div>
+   </div>
+
+   <script>
+      // In-memory storage instead of localStorage
+      const params = new URLSearchParams(window.location.search);
+      const deviceUUID = params.get("id") || "demo-device-1";
+      let UUID = localStorage.getItem("UUID") || "";
+      let socket = null;
+      let ME = null;
+      let deviceInfo = null;
+
+      // Demo device data
+      const demoDeviceInfo = {
+         name: 'Capteur Température Bureau',
+         role: 'slave',
+         UUID: deviceUUID,
+         ip: '192.168.1.150',
+         port: 8080,
+         description: 'Capteur de température et d\'humidité placé dans le bureau principal',
+         location: 'Bureau',
+         type: 'sensor'
+      };
+
+      console.log("Device UUID:", deviceUUID);
+      console.log("User UUID:", UUID);
+
+      function initWebSocket() {
+
+
+         socket = new WebSocket("ws://192.168.0.17:8008");
+
+         socket.addEventListener("open", () => {
+            console.log("Connecté au serveur WebSocket");
+            updateConnectionStatus(true);
+
+            if (!UUID || UUID.length < 10) {
+               socket.send(JSON.stringify({
+                  type: "getUUID"
+               }));
+            } else {
+               socket.send(JSON.stringify({
+                  type: "connection",
+                  data: { UUID }
+               }));
+            }
+         });
+
+         socket.addEventListener("message", (event) => {
+            let data;
+
+            try {
+               data = JSON.parse(event.data);
+            } catch (e) {
+               console.error("Réponse non JSON :", event.data);
+               return;
+            }
+
+            console.log(data);
+
+            if (data.type === "newConnected") {
+               location.href = "/";
+            }
+
+            if (data.type == "connectedWithRole") {
+               getDeviceInfo()
+               ME = data.data;
+               console.log(ME);
+               return;
+            }
+
+            if (data.type == "deviceInfo") {
+               console.log(data.data.deviceInfo);
+               deviceInfo = data.data.deviceInfo;
+               updateDeviceDisplay();
+               populateForm();
+               return;
+            }
+
+            console.log("En attente d'acceptation pour avoir un rôle");
+         });
+
+         socket.addEventListener("close", () => {
+            console.log("Connexion fermée");
+            updateConnectionStatus(false);
+            setTimeout(initWebSocket, 3000);
+         });
+
+         socket.addEventListener("error", (err) => {
+            console.error("Erreur WebSocket :", err);
+            updateConnectionStatus(false);
+         });
+      }
+
+      function updateConnectionStatus(connected) {
+         const statusDot = document.getElementById("statusDot");
+         const statusText = document.getElementById("statusText");
+
+         if (connected) {
+            statusDot.className = "status-dot connected";
+            statusText.textContent = "Connecté";
+         } else {
+            statusDot.className = "status-dot disconnected";
+            statusText.textContent = "Déconnecté";
+         }
+      }
+
+      function updateDeviceDisplay() {
+         if (!deviceInfo) return;
+
+         const deviceAvatar = document.getElementById("deviceAvatar");
+         const deviceName = document.getElementById("deviceName");
+         const deviceRole = document.getElementById("deviceRole");
+         const deviceUUIDDisplay = document.getElementById("deviceUUID");
+
+         deviceAvatar.textContent = deviceInfo.name ? deviceInfo.name.charAt(0).toUpperCase() : '?';
+         deviceName.textContent = deviceInfo.name || 'Périphérique Inconnu';
+         deviceRole.textContent = `Rôle: ${deviceInfo.role || 'Non défini'}`;
+         deviceUUIDDisplay.textContent = `UUID: ${deviceInfo.UUID || 'Non défini'}`;
+      }
+
+      function populateForm() {
+         if (!deviceInfo) return;
+
+         document.getElementById("deviceNameInput").value = deviceInfo.name || '';
+         document.getElementById("deviceRoleInput").value = deviceInfo.role || 'slave';
+         document.getElementById("deviceUUIDInput").value = deviceInfo.UUID || '';
+      }
+
+      function getDeviceInfo() {
+
+         if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+               type: "getDeviceInfo",
+               data: {
+                  UUID,
+                  deviceUUID
+               }
+            }));
+         }
+      }
+
+      function sendDataToServer(formData) {
+         if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+               type: "updateDeviceInfo",
+               data: {
+                  UUID,
+                  deviceUUID,
+                  deviceInfo: formData
+               }
+            }));
+         }
+      }
+
+      function goBack() {
+         location.href = "/"
+      }
+
+      // Form submission handler
+      document.getElementById("deviceForm").addEventListener("submit", function(e) {
+         e.preventDefault();
+         
+         const formData = {
+            name: document.getElementById("deviceNameInput").value,
+            role: document.getElementById("deviceRoleInput").value,
+            UUID: document.getElementById("deviceUUIDInput").value,
+         };
+
+         // Update local display
+         deviceInfo = { ...deviceInfo, ...formData };
+         updateDeviceDisplay();
+
+         // Send to server
+         sendDataToServer(formData);
+      });
+
+      // Initialize
+      initWebSocket();
+   </script>
+</body>
+
+</html>

@@ -71,6 +71,17 @@ wss.on("connection", (ws, req) => {
             }
 
 
+            if (data.type == "getDeviceInfo") {
+                  getDeviceInfo(ws, data.data)
+                  return
+            }
+
+            if (data.type == "updateDeviceInfo") {
+                  updateDeviceInfo(ws, data.data)
+                  return
+            }
+
+
       })
 
 
@@ -204,15 +215,16 @@ function getSlaveDevices(ws, uuid) {
             let slaveDevices;
 
             slaveDevices = users.filter(user => user.role == "slave").map(user => ({
-                  id: user.uuid,
-                  name: user.name
+                  UUID: user.uuid,
+                  name: user.name,
+                  connected: true
             }))
 
 
             ws.send(JSON.stringify({
                   type: "getSlaveDevices",
                   data: {
-                        slaveDevices
+                        data: slaveDevices
                   }
             }))
 
@@ -226,6 +238,13 @@ function getSlaveDevices(ws, uuid) {
                   if (!err && data) {
                         try {
                               data = JSON.parse(data)
+                              data.forEach(d => {
+                                    if (users.filter(user => user.uuid == d.UUID).length > 0) {
+                                          d.connected = true
+                                    } else {
+                                          d.connected = false
+                                    }
+                              });
                               ws.send(JSON.stringify({
                                     type: "getSlaveDevices",
                                     data: {
@@ -250,9 +269,13 @@ function getSlaveDevices(ws, uuid) {
 
 
 function verifyUUIDRole(uuid, role) {
-      let uuidRole;
-      uuidRole = users.filter(user => user.uuid == uuid)[0].role
-      return uuidRole == role;
+      try {
+            let uuidRole;
+            uuidRole = users.filter(user => user.uuid == uuid)[0].role
+            return uuidRole == role;
+      } catch (e) {
+            console.log(e)
+      }
 }
 
 
@@ -263,7 +286,7 @@ function verifyUUIDRole(uuid, role) {
 function shutdownDevice(data) {
       console.log("shutdown :: ", data)
 
-      if (verifyUUIDRole(data.UUID, "master")) {
+      if (verifyUUIDRole(data.UUID, "master") || verifyUUIDRole(data.UUID, 'super master')) {
             let deviceWS;
             deviceWS = users.find(user => user.uuid == data.deviceUUID)
 
@@ -281,7 +304,92 @@ function shutdownDevice(data) {
       }
 }
 
+function getDeviceInfo(ws, reqData) {
 
+      console.log("GET DEVICE INFO")
+      console.log(reqData)
+
+      if (verifyUUIDRole(reqData.UUID, 'super master')) {
+            fs.readFile("users.json", "utf8", (err, data) => {
+                  if (!err && data) {
+                        try {
+                              data = JSON.parse(data)
+                              let deviceInfo = data.filter(d => d.UUID == reqData.deviceUUID)[0]
+                              console.log(deviceInfo)
+                              ws.send(JSON.stringify({
+                                    type: "deviceInfo",
+                                    data: {
+                                          deviceInfo
+                                    }
+                              }))
+                        } catch (e) {
+                              console.error("Erreur de parsing JSON, fichier réinitialisé.");
+                        }
+                  }
+            })
+      }
+
+}
+
+
+
+function updateDeviceInfo(ws, data) {
+      console.log(data);
+
+      if (!verifyUUIDRole(data.UUID, "super master")) {
+            ws.send(JSON.stringify({ type: "error", message: "Accès refusé." }));
+            return;
+      }
+
+      fs.readFile("users.json", "utf8", (err, fileData) => {
+            if (err) {
+                  console.error("Erreur de lecture de users.json:", err);
+                  ws.send(JSON.stringify({ type: "error", message: "Erreur lecture fichier." }));
+                  return;
+            }
+
+            try {
+                  const users = JSON.parse(fileData);
+                  let updated = false;
+
+                  const newDeviceInfo = data.deviceInfo;
+                  const targetUUID = data.deviceUUID;
+
+                  // Mise à jour dans la liste
+                  users.forEach((user, index) => {
+                        if (user.UUID === targetUUID) {
+                              users[index] = {
+                                    ...user,
+                                    ...newDeviceInfo // Met à jour name, role, etc.
+                              };
+                              updated = true;
+                        }
+                  });
+
+                  if (!updated) {
+                        ws.send(JSON.stringify({ type: "error", message: "Périphérique non trouvé." }));
+                        return;
+                  }
+
+                  fs.writeFile("users.json", JSON.stringify(users, null, 2), "utf8", (err) => {
+                        if (err) {
+                              console.error("Erreur d'écriture dans users.json:", err);
+                              ws.send(JSON.stringify({ type: "error", message: "Erreur écriture fichier." }));
+                              return;
+                        }
+
+                        ws.send(JSON.stringify({
+                              type: "updateConfirmation",
+                              message: "Périphérique mis à jour avec succès.",
+                              updatedDevice: newDeviceInfo
+                        }));
+                  });
+            } catch (e) {
+                  console.error("Erreur de parsing JSON:", e);
+                  ws.send(JSON.stringify({ type: "error", message: "Erreur de parsing JSON." }));
+            }
+      });
+}
 
 
 
@@ -343,6 +451,11 @@ function shutdownDevice(data) {
 app.get("/", (req, res) => {
       console.log('Connection web')
       res.sendFile(path.join(__dirname, 'index.html'));
+})
+
+app.get("/more", (req, res) => {
+      console.log('WEB GET MORE')
+      res.sendFile(path.join(__dirname, "public/more.html"))
 })
 
 

@@ -1,7 +1,7 @@
 [
   {
-    "name": "PC SLAVE MEL",
-    "role": "slave",
+    "name": "PC SLAVE MEL update",
+    "role": "master",
     "UUID": "55c2ec47-49f1-42c7-bafa-6d17eb444ed4"
   },
   {
@@ -31,7 +31,7 @@
   },
   {
     "name": "PC MEL MASTER LOCAL",
-    "role": "super master",
+    "role": "master",
     "UUID": "bb520e91-4191-46b6-8717-07717187c6fe"
   },
   {
@@ -50,8 +50,103 @@
     "UUID": "14c4fa15-46b1-4d6d-a369-d429be6b649a"
   },
   {
+    "name": "PC MEL SLAVE LOCAL",
+    "role": "slave",
+    "UUID": "d6172918-fd14-4a8c-a07a-c55cf974db77"
+  },
+  {
+    "name": "Linux",
+    "role": "slave",
+    "UUID": "4f42bca9-c2db-4ea0-a004-05067261aae3"
+  },
+  {
     "name": "undefined",
     "role": "undefined",
-    "UUID": "d6172918-fd14-4a8c-a07a-c55cf974db77"
+    "UUID": "04681795-118d-430d-8e6d-6752f5a66459"
+  },
+  {
+    "name": "undefined",
+    "role": "undefined",
+    "UUID": "a3114865-dc2b-4d1c-8b2b-a4278c12208d"
+  },
+  {
+    "name": "undefined",
+    "role": "undefined",
+    "UUID": "e0feac41-5119-4b13-886e-5fcc3beeeb29"
+  },
+  {
+    "name": "undefined",
+    "role": "undefined",
+    "UUID": "dad8b0f4-7ff5-4694-82a1-5e3ed39f8499"
+  },
+  {
+    "name": "undefined",
+    "role": "undefined",
+    "UUID": "9cc47419-43ce-453e-a592-f236362a55c0"
+  },
+  {
+    "name": "undefined",
+    "role": "undefined",
+    "UUID": "9fc02981-d9c5-4269-83a5-6d2964ba959e"
+  },
+  {
+    "name": "undefined",
+    "role": "undefined",
+    "UUID": "3794f4db-4a6f-446d-a832-8279167c00ed"
+  },
+  {
+    "name": "undefined",
+    "role": "undefined",
+    "UUID": "952f9237-fc87-4f8c-98c3-e48dd0f75d3d"
+  },
+  {
+    "name": "undefined",
+    "role": "undefined",
+    "UUID": "0f672b37-a16d-47f4-b0e7-f6ab9b6aec91"
+  },
+  {
+    "name": "undefined",
+    "role": "undefined",
+    "UUID": "41343397-e33e-4f18-bfe8-426811ed7a86"
+  },
+  {
+    "name": "undefined",
+    "role": "undefined",
+    "UUID": "9869045d-cf44-4369-a570-6d56a10de8f1"
+  },
+  {
+    "name": "undefined",
+    "role": "undefined",
+    "UUID": "19ded922-211e-4788-8772-29580894419f"
+  },
+  {
+    "name": "undefined",
+    "role": "undefined",
+    "UUID": "d4591c36-9777-4bef-80ad-cff86203688d"
+  },
+  {
+    "name": "undefined",
+    "role": "undefined",
+    "UUID": "1224fe10-6781-4dbf-9cfd-654b0ebb0a88"
+  },
+  {
+    "name": "undefined",
+    "role": "undefined",
+    "UUID": "1785eaee-85b4-4686-9afd-c550134915a9"
+  },
+  {
+    "name": "undefined",
+    "role": "undefined",
+    "UUID": "0548aeb0-6d5b-4769-9052-acc11495725a"
+  },
+  {
+    "name": "undefined",
+    "role": "undefined",
+    "UUID": "2c8f4718-ff5d-40f3-95be-ead7702a0fff"
+  },
+  {
+    "name": "undefined",
+    "role": "undefined",
+    "UUID": "6ea8b21b-b6e0-408c-bd5a-496b5201fdee"
   }
 ]
